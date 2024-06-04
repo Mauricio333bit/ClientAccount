@@ -33,7 +33,7 @@ const login = async (req, res) => {
   try {
     const user = await userService.getUserByEmail(email);
     const isPasswordMatch = await bcrypt.compare(password, user.password);
-    const isCuitMatch = cuit == user.cuit;
+    const isCuitMatch = cuit == user.cuit; //si el cuit recibido del front coincide con el de la db
     if (!isPasswordMatch) {
       return res.status(401).send({ message: "invalid password" });
     }
