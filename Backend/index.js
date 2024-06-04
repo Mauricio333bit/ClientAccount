@@ -2,12 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+
 const app = express();
+
 app.use(morgan("dev")); // morgan es para que nos muestre por consola las peticiones HTTP que se hacen a nuestra app
 
 // en la carpeta routes manejamos las distintas rutas dentro del backend,
 const homeRoute = require("./src/routes/homeRoute");
-app.use("/", homeRoute);
+app.use("/", homeRoute); //http://localhost:2024"/"
 
 app.use(cors()); //CORS es útil para permitir que la aplicación sea accedida desde diferentes origenes, esto lo podemos omitir mepa si se configura los permisos de acceso. REVISAR
 
