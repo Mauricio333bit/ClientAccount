@@ -1,9 +1,22 @@
-import { LoginForm } from "./pages/LoginForm";
+import Inicio from "./pages/Inicio";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 function App() {
   return (
-    <>
-      <LoginForm></LoginForm>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Inicio />} />
+        <Route path="/admin" element={"Estas en el panel de admin"} />
+        <Route
+          path="/admin/accounts"
+          element={"Estas en el panel de admin,seccion cuentas"}
+        />
+        <Route
+          path="/account/home"
+          element={"Estas en el inicio de la cuenta usuario"}
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

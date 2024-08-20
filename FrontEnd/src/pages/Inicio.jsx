@@ -3,7 +3,9 @@ import Lottie from "lottie-react";
 import signIn from "../assets/signIn.json";
 import signUp from "../assets/sign-up.json";
 
-export const LoginForm = () => {
+import { LoginForm } from "../components/LoginForm";
+import RegisterForm from "../components/RegisterForm";
+const Inicio = () => {
   // Estado para controlar el modo de inicio de sesión/registro
   const [signInMode, setSignInMode] = useState(false);
 
@@ -11,46 +13,14 @@ export const LoginForm = () => {
   const handleSignInMode = () => {
     setSignInMode(!signInMode);
   };
+
   return (
     <>
       <div className={`containerLog ${signInMode ? "sign-up-mode" : ""}`}>
         <div className="forms-container">
           <div className="signin-signup">
-            <form action="" className="sign-in-form">
-              <h2 className="title">Inicio de sesion</h2>
-              <div className="input-field">
-                <i className="fas fa-user"></i>
-                <input type="text" placeholder="Nombre de usuario" />
-              </div>
-              <div className="input-field">
-                <i className="fas fa-lock"></i>
-                <input type="password" placeholder="Contraseña" />
-              </div>
-              <input type="submit" value="Iniciar" className="btn solid" />
-              <p className="social-text"></p>
-            </form>
-
-            <form action="" className="sign-up-form">
-              <h2 className="title">Registro</h2>
-              <div className="input-field">
-                <i className="fas fa-user"></i>
-                <input type="text" placeholder="Nombre de usuario" />
-              </div>
-              <div className="input-field">
-                <i className="fas fa-user-shield"></i>
-                <input type="text" placeholder="CUIT" />
-              </div>
-              <div className="input-field">
-                <i className="fas fa-envelope"></i>
-                <input type="text" placeholder="Email" />
-              </div>
-              <div className="input-field">
-                <i className="fas fa-lock"></i>
-                <input type="password" placeholder="Contraseña" />
-              </div>
-              <input type="submit" value="Crear cuenta" className="btn solid" />
-              <p className="social-text"></p>
-            </form>
+            <LoginForm></LoginForm>
+            <RegisterForm></RegisterForm>
           </div>
         </div>
         <div className="panels-container">
@@ -87,3 +57,4 @@ export const LoginForm = () => {
     </>
   );
 };
+export default Inicio;

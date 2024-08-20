@@ -16,7 +16,7 @@ module.exports = {
         email: email,
         password: password,
         rol,
-        cuit: cuit,
+        cuit,
       });
       return user;
     } catch (error) {
@@ -61,6 +61,24 @@ module.exports = {
       return users;
     } catch (error) {
       throw new Error(error.message);
+    }
+  },
+  async deleteUser(id) {
+    try {
+      const deleteUser = await User.findByIdAndDelete(id);
+      return deleteUser;
+    } catch (error) {
+      throw new Error("Failed to delete user id: " + id);
+    }
+  },
+  async updateUser(id, dataUpdate) {
+    try {
+      const userUpdated = await User.findByIdAndUpdate(id, dataUpdate, {
+        new: true,
+      });
+      return userUpdated;
+    } catch (error) {
+      throw new Error("Failed to update user id: " + id);
     }
   },
 };
