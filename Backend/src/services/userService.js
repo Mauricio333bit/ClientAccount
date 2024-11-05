@@ -1,5 +1,5 @@
 const { getUserIdFromToken } = require("../config/jwtProvider");
-const User = require("../models/user.model");
+const User = require("../models/user.model"); // importado desde model user
 const bcrypt = require("bcrypt");
 module.exports = {
   async createUser(userData) {

@@ -244,3 +244,24 @@ form.sign-up-form {
 .containerLog.sign-up-mode .right-panel {
   pointer-events: all;
 }
+
+@media (max-width: 1066px) {
+  .containerLog {
+    min-height: 100vh;
+  }
+  .containerLog::before {
+    right: 68%;
+  }
+}
+@media (max-width: 892px) {
+  .containerLog {
+    min-height: 100vh;
+  }
+  .containerLog::before,
+  .left-panel {
+    display: none;
+  }
+  .signin-signup {
+    left: 50%;
+  }
+}

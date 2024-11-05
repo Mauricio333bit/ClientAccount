@@ -14,7 +14,7 @@ const getAllAccounts = async (req, res) => {
   try {
     const accounts = await accountService.getAllAccounts();
 
-    return res.status(201).send({ message: accounts });
+    return res.status(201).send({ message: accounts, accounts });
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }

@@ -6,6 +6,7 @@ const mongodbUrl = DATABASE_URL;
 
 async function connectDB() {
   return await mongoose.connect(mongodbUrl); // esta funcion nos devuelve la conexion realizada a la bd alojada en atlas, la cual se importara despues en nuestro server.js
+  // el await indica al navegador que espere que se resuelva la "funcion" para continuar
 }
 
 mongoose.connection.on("open", (_) => {

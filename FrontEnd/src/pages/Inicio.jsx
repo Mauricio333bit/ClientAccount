@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import Lottie from "lottie-react";
 import signIn from "../assets/signIn.json";
 import signUp from "../assets/sign-up.json";
-
 import { LoginForm } from "../components/LoginForm";
 import RegisterForm from "../components/RegisterForm";
+
 const Inicio = () => {
   // Estado para controlar el modo de inicio de sesión/registro
   const [signInMode, setSignInMode] = useState(false);
@@ -19,10 +19,11 @@ const Inicio = () => {
       <div className={`containerLog ${signInMode ? "sign-up-mode" : ""}`}>
         <div className="forms-container">
           <div className="signin-signup">
-            <LoginForm></LoginForm>
-            <RegisterForm></RegisterForm>
+            <LoginForm />
+            <RegisterForm />
           </div>
         </div>
+
         <div className="panels-container">
           <div className="panel left-panel">
             <div className="content">
@@ -38,6 +39,7 @@ const Inicio = () => {
             </div>
             <Lottie animationData={signUp} className="p-0 mx-auto image" />
           </div>
+
           <div className="panel right-panel">
             <div className="content">
               <h3>Ya tienes cuenta?</h3>
@@ -50,11 +52,12 @@ const Inicio = () => {
                 Ingresar
               </button>
             </div>
-            <Lottie animationData={signIn} className=" image" />
+            <Lottie animationData={signIn} className="image" />
           </div>
         </div>
       </div>
     </>
   );
 };
+
 export default Inicio;
