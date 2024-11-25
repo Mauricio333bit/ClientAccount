@@ -22,8 +22,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import useAccountStore from "../store/accountStore";
 
-// Datos precargados
+// import useClienteStore from "../store/clienteStore";
+
+// Datos clientes
+
 const initialAccounts = [
   {
     id: "001",
@@ -212,7 +216,15 @@ const Button = ({ children, onClick, className = "" }) => (
   </button>
 );
 
-const Input = ({ label, type = "text", id, className = "" }) => (
+const Input = ({
+  label,
+  type = "text",
+  id,
+  name,
+  value,
+  onChange,
+  className = "",
+}) => (
   <div className="mb-4">
     <label htmlFor={id} className="block mb-2">
       {label}
@@ -220,17 +232,34 @@ const Input = ({ label, type = "text", id, className = "" }) => (
     <input
       type={type}
       id={id}
+      name={name}
+      value={value}
+      onChange={onChange}
       className={`w-full px-3 py-2 border rounded ${className}`}
     />
   </div>
 );
 
-const Select = ({ label, id, options, className = "" }) => (
+const Select = ({
+  label,
+  id,
+  name,
+  value,
+  options,
+  onChange,
+  className = "",
+}) => (
   <div className="mb-4">
     <label htmlFor={id} className="block mb-2">
       {label}
     </label>
-    <select id={id} className={`w-full px-3 py-2 border rounded ${className}`}>
+    <select
+      id={id}
+      name={name}
+      value={value}
+      onChange={onChange}
+      className={`w-full px-3 py-2 border rounded ${className}`}
+    >
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}
@@ -261,7 +290,9 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 export default function Dashboard() {
   const [activeSection, setActiveSection] = useState("cuentas");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  //clientes
   const [accounts, setAccounts] = useState(initialAccounts);
+
   const [users, setUsers] = useState(initialUsers);
   const [movements, setMovements] = useState(initialMovements);
 
@@ -385,22 +416,100 @@ export default function Dashboard() {
   );
 }
 
-function CuentasSection({ accounts, setAccounts, movements }) {
+function CuentasSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cuit: "",
+    type: "",
+    password: "",
+    idEmployed: "",
+  });
 
-  const addAccount = (newAccount) => {
-    setAccounts([
-      ...accounts,
-      { ...newAccount, id: (accounts.length + 1).toString().padStart(3, "0") },
-    ]);
-    setIsModalOpen(false);
+  const { accounts, addAccount } = useAccountStore();
+
+  const tipoCliente = [
+    { value: "Mayorista", label: "Mayorista" },
+    { value: "Minorista", label: "Minorista" },
+    { value: "Distribuidor", label: "Distribuidor" },
+  ];
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    console.log(name, value);
+    setNewClient((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const calculateBalance = (accountId) => {
-    return movements
-      .filter((movement) => movement.accountId === accountId)
-      .reduce((sum, movement) => sum + movement.amount, 0);
+  // const handleTypeChange = (e) => {
+  //   setNewClient((prev) => ({
+  //     ...prev,
+  //     type: e.target.value,
+  //   }));
+  // };
+
+  const validateForm = () => {
+    const requiredFields = ["name", "email", "cuit", "password", "type"];
+    for (const field of requiredFields) {
+      if (!newClient[field]) {
+        alert(`El campo ${field} es obligatorio`);
+        return false;
+      }
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newClient.email)) {
+      alert("El formato del email no es válido");
+      return false;
+    }
+
+    // Validar CUIT (asumiendo formato argentino: 11 dígitos)
+    const cuitRegex = /^\d{11}$/;
+    if (!cuitRegex.test(newClient.cuit)) {
+      alert("El CUIT debe tener 11 dígitos");
+      return false;
+    }
+
+    return true;
   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(newClient);
+    if (!validateForm()) return;
+
+    // Preparar datos de la cuenta
+    const accountData = {
+      ...newClient,
+      rol: "cliente",
+      balance: 0,
+      idEmployed: 123,
+    };
+    console.log(accountData);
+
+    // Agregar la cuenta
+    addAccount(accountData);
+
+    // Resetear el formulario
+    setNewClient({
+      name: "",
+      email: "",
+      phone: "",
+      cuit: "",
+      type: "",
+      password: "",
+    });
+  };
+
+  // Filtrar solo las cuentas de clientes
+  const clientAccounts = accounts.filter(
+    (account) => account.rol === "cliente" && account.idEmployed
+  );
 
   return (
     <div>
@@ -433,14 +542,14 @@ function CuentasSection({ accounts, setAccounts, movements }) {
             </tr>
           </thead>
           <tbody>
-            {accounts.map((account) => (
+            {clientAccounts.map((account) => (
               <tr key={account.id}>
                 <td className="px-6 py-4 whitespace-nowrap">{account.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{account.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{account.email}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{account.type}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  ${calculateBalance(account.id).toFixed(2)}
+                  {account.balance}
                 </td>
               </tr>
             ))}
@@ -453,29 +562,57 @@ function CuentasSection({ accounts, setAccounts, movements }) {
         title="Agregar Nuevo Cliente"
       >
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const newAccount = {
-              name: e.target.name.value,
-              email: e.target.email.value,
-              type: e.target.type.value,
-            };
-            addAccount(newAccount);
-          }}
+          onSubmit={handleSubmit}
+          className="bg-slate-200 p-4 md:p-6 rounded-lg shadow mb-6"
         >
-          <Input label="Nombre" id="name" />
-          <Input label="Email" id="email" type="email" />
-          <Select
-            label="Tipo"
-            id="type"
-            options={[
-              { value: "Minorista", label: "Minorista" },
-              { value: "Mayorista", label: "Mayorista" },
-              { value: "Distribuidor", label: "Distribuidor" },
-            ]}
-          />
-          <Button type="submit" className="w-full mt-4">
-            Crear Cliente
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Nombre"
+              name="name"
+              value={newClient.name}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              value={newClient.email}
+              onChange={(e) => handleInputChange(e)}
+              required
+            />
+            <Input
+              label="CUIT"
+              name="cuit"
+              value={newClient.cuit}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              label="Teléfono"
+              name="phone"
+              value={newClient.phone}
+              onChange={handleInputChange}
+            />
+            <Input
+              label="Contraseña"
+              type="password"
+              name="password"
+              value={newClient.password}
+              onChange={handleInputChange}
+              required
+            />
+            <Select
+              label="Tipo de cliente"
+              name="type"
+              options={tipoCliente}
+              onChange={handleInputChange}
+              value={newClient.type}
+              required
+            />
+          </div>
+          <Button type="submit" className="mt-4 w-full md:w-auto">
+            Crear Cuenta de Cliente
           </Button>
         </form>
       </Modal>
@@ -483,21 +620,101 @@ function CuentasSection({ accounts, setAccounts, movements }) {
   );
 }
 
-function UsuariosSection({ users, setUsers }) {
+function UsuariosSection() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newAccount, setNewAccount] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    cuit: "",
+    type: "",
+    password: "",
+    idEmployed: "",
+  });
 
-  const addUser = (newUser) => {
-    setUsers([
-      ...users,
-      { ...newUser, id: (users.length + 1).toString().padStart(3, "0") },
-    ]);
-    setIsModalOpen(false);
+  const { accounts, addAccount } = useAccountStore();
+  const typeAccount = [
+    { value: "empleado", label: "Empleado" },
+    { value: "administrador", label: "Administrador" },
+  ];
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    console.log(name, value);
+    setNewAccount((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
+
+  // const handleTypeChange = (e) => {
+  //   setNewAccount((prev) => ({
+  //     ...prev,
+  //     type: e.target.value,
+  //   }));
+  // };
+
+  const validateForm = () => {
+    const requiredFields = ["name", "email", "cuit", "password", "rol"];
+    for (const field of requiredFields) {
+      if (!newAccount[field]) {
+        alert(`El campo ${field} es obligatorio`);
+        return false;
+      }
+    }
+
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newAccount.email)) {
+      alert("El formato del email no es válido");
+      return false;
+    }
+
+    // Validar CUIT (asumiendo formato argentino: 11 dígitos)
+    const cuitRegex = /^\d{11}$/;
+    if (!cuitRegex.test(newAccount.cuit)) {
+      alert("El CUIT debe tener 11 dígitos");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(newAccount);
+    if (!validateForm()) return;
+
+    // Preparar datos de la cuenta
+    const accountData = {
+      ...newAccount,
+
+      idEmployed: 123,
+    };
+    console.log(accountData);
+
+    // Agregar la cuenta
+    addAccount(accountData);
+
+    // Resetear el formulario
+    setNewAccount({
+      name: "",
+      email: "",
+      phone: "",
+      cuit: "",
+      type: "",
+      password: "",
+    });
+  };
+  console.log(accounts);
+  // Filtrar solo las cuentas que no son clientes
+  const users = accounts.filter(
+    (account) => account.rol == "empleado" || account.rol == "administrador"
+  );
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">Usuarios</h2>
+        <h2 className="text-2xl font-semibold text-white">Usuarios</h2>
         <Button onClick={() => setIsModalOpen(true)}>
           <FaPlus className="mr-2" />
           Nuevo Usuario
@@ -508,38 +725,66 @@ function UsuariosSection({ users, setUsers }) {
           <div key={user.id} className="bg-white p-6 rounded-lg shadow">
             <h3 className="text-xl font-semibold mb-2">{user.name}</h3>
             <p>Email: {user.email}</p>
-            <p>Rol: {user.role}</p>
+            <p>Rol: {user.rol}</p>
           </div>
         ))}
       </div>
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Agregar Nuevo Usuario"
+        title="Agregar Usuario"
       >
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            const newUser = {
-              name: e.target.name.value,
-              email: e.target.email.value,
-              role: e.target.role.value,
-            };
-            addUser(newUser);
-          }}
+          onSubmit={handleSubmit}
+          className="bg-slate-200 p-4 md:p-6 rounded-lg shadow mb-6"
         >
-          <Input label="Nombre" id="name" />
-          <Input label="Email" id="email" type="email" />
-          <Select
-            label="Rol"
-            id="role"
-            options={[
-              { value: "Vendedor", label: "Vendedor" },
-              { value: "Cajero", label: "Cajero" },
-              { value: "Administrador", label: "Administrador" },
-            ]}
-          />
-          <Button type="submit" className="w-full mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Nombre"
+              name="name"
+              value={newAccount.name}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              label="Email"
+              type="email"
+              name="email"
+              value={newAccount.email}
+              onChange={(e) => handleInputChange(e)}
+              required
+            />
+            <Input
+              label="CUIT"
+              name="cuit"
+              value={newAccount.cuit}
+              onChange={handleInputChange}
+              required
+            />
+            <Input
+              label="Teléfono"
+              name="phone"
+              value={newAccount.phone}
+              onChange={handleInputChange}
+            />
+            <Input
+              label="Contraseña"
+              type="password"
+              name="password"
+              value={newAccount.password}
+              onChange={handleInputChange}
+              required
+            />
+            <Select
+              label="Rol"
+              name="rol"
+              options={typeAccount}
+              onChange={handleInputChange}
+              value={newAccount.type}
+              required
+            />
+          </div>
+          <Button type="submit" className="mt-4 w-full md:w-auto">
             Crear Usuario
           </Button>
         </form>
@@ -566,10 +811,6 @@ function MovimientosSection({ movements, setMovements, users, accounts }) {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold">Movimientos</h2>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <FaPlus className="mr-2" />
-          Nuevo Movimiento
-        </Button>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white">
