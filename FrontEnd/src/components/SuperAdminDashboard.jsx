@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
+
 import {
   FaUsers,
   FaCreditCard,
@@ -23,6 +25,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import useAccountStore from "../store/accountStore";
+import useMovimientoStore from "../store/movimientoStore"; 
 
 // import useClienteStore from "../store/clienteStore";
 
@@ -627,7 +630,7 @@ function UsuariosSection() {
     email: "",
     phone: "",
     cuit: "",
-    rol: "",  // Asegúrate de que 'rol' sea el campo correcto
+    type: "",
     password: "",
     idEmployed: "",
   });
@@ -637,7 +640,6 @@ function UsuariosSection() {
     { value: "empleado", label: "Empleado" },
     { value: "administrador", label: "Administrador" },
   ];
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log(name, value);
@@ -647,7 +649,13 @@ function UsuariosSection() {
     }));
   };
 
-  // Validación del formulario
+  // const handleTypeChange = (e) => {
+  //   setNewAccount((prev) => ({
+  //     ...prev,
+  //     type: e.target.value,
+  //   }));
+  // };
+
   const validateForm = () => {
     const requiredFields = ["name", "email", "cuit", "password", "rol"];
     for (const field of requiredFields) {
@@ -682,7 +690,8 @@ function UsuariosSection() {
     // Preparar datos de la cuenta
     const accountData = {
       ...newAccount,
-      idEmployed: 123, // Ajusta según necesidad
+
+      idEmployed: 123,
     };
     console.log(accountData);
 
@@ -695,16 +704,14 @@ function UsuariosSection() {
       email: "",
       phone: "",
       cuit: "",
-      rol: "", // Asegúrate de resetear el rol aquí
+      type: "",
       password: "",
     });
   };
-
   console.log(accounts);
-
   // Filtrar solo las cuentas que no son clientes
   const users = accounts.filter(
-    (account) => account.rol === "empleado" || account.rol === "administrador"
+    (account) => account.rol == "empleado" || account.rol == "administrador"
   );
 
   return (
@@ -747,7 +754,7 @@ function UsuariosSection() {
               type="email"
               name="email"
               value={newAccount.email}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange(e)}
               required
             />
             <Input
@@ -771,19 +778,12 @@ function UsuariosSection() {
               onChange={handleInputChange}
               required
             />
-            {/* Asegúrate de que el valor sea "rol" y se pase correctamente */}
             <Select
               label="Rol"
-              name="rol"  // Usa "rol" aquí
+              name="rol"
               options={typeAccount}
-              onChange={(e) => {
-                // Asegúrate de actualizar correctamente el valor del rol
-                setNewAccount((prev) => ({
-                  ...prev,
-                  rol: e.target.value,  // Aquí se toma el valor directamente
-                }));
-              }}
-              value={newAccount.rol}  // El valor que tomará es el valor de "rol"
+              onChange={handleInputChange}
+              value={newAccount.type}
               required
             />
           </div>
@@ -797,17 +797,31 @@ function UsuariosSection() {
 }
 
 
-function MovimientosSection({ movements, setMovements, users, accounts }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const addMovement = (newMovement) => {
-    setMovements([
-      {
-        ...newMovement,
-        id: (movements.length + 1).toString().padStart(3, "0"),
-      },
-      ...movements,
-    ]);
+
+
+
+
+
+function MovimientosSection() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const {
+    accounts
+  } = useAccountStore();
+  const {
+    movimientos,
+    agregarMovimiento,
+    eliminarMovimiento,
+    loadFromSessionStorage,
+  } = useMovimientoStore();
+console.log(movimientos)
+  useEffect(() => {
+    // Cargar movimientos desde sessionStorage al montar el componente
+    loadFromSessionStorage();
+  }, [loadFromSessionStorage]);
+
+  const handleAddMovement = (newMovement) => {
+    agregarMovimiento(newMovement, () => {}); // Callback opcional
     setIsModalOpen(false);
   };
 
@@ -824,7 +838,7 @@ function MovimientosSection({ movements, setMovements, users, accounts }) {
                 Fecha
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Usuario
+                Usuario (Empleado)
               </th>
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Cliente
@@ -835,25 +849,55 @@ function MovimientosSection({ movements, setMovements, users, accounts }) {
               <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Monto
               </th>
+              <th className="px-6 py-3 border-b-2 border-gray-300 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Acción
+              </th>
             </tr>
           </thead>
           <tbody>
-            {movements.map((movement) => (
-              <tr key={movement.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{movement.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {users.find((u) => u.id === movement.userId)?.name || "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {accounts.find((a) => a.id === movement.accountId)?.name ||
-                    "N/A"}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">{movement.type}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  ${movement.amount.toFixed(2)}
+            {movimientos && movimientos.length > 0 ? (
+              movimientos.map((movement) => {
+                // Buscar datos del empleado (usuario) y cliente
+                const empleado = accounts.find(
+                  (account) =>
+                    account.id === movement.employeeId && account.rol == "empleado"
+                );
+                const cliente = accounts.find(
+                  (account) =>
+                    account.id === movement.accountId && account.rol == "cliente"
+                ); 
+
+                return (
+                  <tr key={movement.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">{movement.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {empleado ? empleado.name : "Empleado no encontrado"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {cliente ? cliente.name : "Cliente no encontrado"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{movement.type}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      ${movement.amount.toFixed(2)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={() => eliminarMovimiento(movement.id)}
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center text-gray-500">
+                  No hay movimientos registrados.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
@@ -872,25 +916,29 @@ function MovimientosSection({ movements, setMovements, users, accounts }) {
               type: e.target.type.value,
               amount: parseFloat(e.target.amount.value),
             };
-            addMovement(newMovement);
+            handleAddMovement(newMovement);
           }}
         >
           <Input label="Fecha" id="date" type="date" />
           <Select
-            label="Usuario"
+            label="Usuario (Empleado)"
             id="userId"
-            options={users.map((user) => ({
-              value: user.id,
-              label: user.name,
-            }))}
+            options={accounts
+              .filter((account) => account.rol === "empleado")
+              .map((empleado) => ({
+                value: empleado.id,
+                label: empleado.name || "Empleado sin nombre",
+              }))}
           />
           <Select
             label="Cliente"
             id="accountId"
-            options={accounts.map((account) => ({
-              value: account.id,
-              label: account.name,
-            }))}
+            options={accounts
+              .filter((account) => account.rol === "cliente")
+              .map((cliente) => ({
+                value: cliente.id,
+                label: cliente.name || "Cliente sin nombre",
+              }))}
           />
           <Select
             label="Tipo"
@@ -911,6 +959,12 @@ function MovimientosSection({ movements, setMovements, users, accounts }) {
     </div>
   );
 }
+
+
+
+
+
+
 
 function EstadisticasSection({ accounts, movements }) {
   const ventasPorMes = [

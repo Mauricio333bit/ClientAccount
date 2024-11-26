@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+
 export const tiposMovimiento = [
   { value: "Factura", label: "Factura" },
   { value: "Recibo", label: "Recibo" },
