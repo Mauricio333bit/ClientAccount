@@ -132,6 +132,7 @@ const useAccountStore = create(
 
     // Autenticación
     login: (email, password, cuit) => {
+      console.log("entraste a login");
       set({ isLoading: true, error: null });
 
       //validación de credenciales aca deberiamos implementar la llamada a la api para el login
@@ -159,7 +160,7 @@ const useAccountStore = create(
         get().saveToSessionStorage();
       }
 
-      return true;
+      return account;
     },
 
     logout: () =>

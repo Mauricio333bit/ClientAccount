@@ -25,7 +25,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import useAccountStore from "../store/accountStore";
-import useMovimientoStore from "../store/movimientoStore"; 
+
+import { useNavigate } from "react-router-dom";
+
 
 // import useClienteStore from "../store/clienteStore";
 
@@ -291,6 +293,10 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const logout = () => {
+    navigate("/");
+  };
   const [activeSection, setActiveSection] = useState("cuentas");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   //clientes
@@ -407,6 +413,7 @@ export default function Dashboard() {
               data-twe-ripple-init
               data-twe-ripple-color="light"
               title="Cerrar  sesion"
+              onClick={() => logout()}
             >
               <ImExit size={30} />
             </button>
