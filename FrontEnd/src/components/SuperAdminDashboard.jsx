@@ -627,7 +627,7 @@ function UsuariosSection() {
     email: "",
     phone: "",
     cuit: "",
-    type: "",
+    rol: "",  // Asegúrate de que 'rol' sea el campo correcto
     password: "",
     idEmployed: "",
   });
@@ -637,6 +637,7 @@ function UsuariosSection() {
     { value: "empleado", label: "Empleado" },
     { value: "administrador", label: "Administrador" },
   ];
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log(name, value);
@@ -646,13 +647,7 @@ function UsuariosSection() {
     }));
   };
 
-  // const handleTypeChange = (e) => {
-  //   setNewAccount((prev) => ({
-  //     ...prev,
-  //     type: e.target.value,
-  //   }));
-  // };
-
+  // Validación del formulario
   const validateForm = () => {
     const requiredFields = ["name", "email", "cuit", "password", "rol"];
     for (const field of requiredFields) {
@@ -687,8 +682,7 @@ function UsuariosSection() {
     // Preparar datos de la cuenta
     const accountData = {
       ...newAccount,
-
-      idEmployed: 123,
+      idEmployed: 123, // Ajusta según necesidad
     };
     console.log(accountData);
 
@@ -701,14 +695,16 @@ function UsuariosSection() {
       email: "",
       phone: "",
       cuit: "",
-      type: "",
+      rol: "", // Asegúrate de resetear el rol aquí
       password: "",
     });
   };
+
   console.log(accounts);
+
   // Filtrar solo las cuentas que no son clientes
   const users = accounts.filter(
-    (account) => account.rol == "empleado" || account.rol == "administrador"
+    (account) => account.rol === "empleado" || account.rol === "administrador"
   );
 
   return (
@@ -751,7 +747,7 @@ function UsuariosSection() {
               type="email"
               name="email"
               value={newAccount.email}
-              onChange={(e) => handleInputChange(e)}
+              onChange={handleInputChange}
               required
             />
             <Input
@@ -775,12 +771,19 @@ function UsuariosSection() {
               onChange={handleInputChange}
               required
             />
+            {/* Asegúrate de que el valor sea "rol" y se pase correctamente */}
             <Select
               label="Rol"
-              name="rol"
+              name="rol"  // Usa "rol" aquí
               options={typeAccount}
-              onChange={handleInputChange}
-              value={newAccount.type}
+              onChange={(e) => {
+                // Asegúrate de actualizar correctamente el valor del rol
+                setNewAccount((prev) => ({
+                  ...prev,
+                  rol: e.target.value,  // Aquí se toma el valor directamente
+                }));
+              }}
+              value={newAccount.rol}  // El valor que tomará es el valor de "rol"
               required
             />
           </div>
@@ -792,6 +795,7 @@ function UsuariosSection() {
     </div>
   );
 }
+
 
 function MovimientosSection({ movements, setMovements, users, accounts }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
