@@ -6,13 +6,14 @@ import useAccountStore, { ROLES } from "../store/accountStore";
 
 import useMovimientoStore from "../store/movimientoStore";
 import { tiposMovimiento } from "../store/movimientoStore";
+import { useNavigate } from "react-router-dom";
 
-const loggedInEmployee = {
-  id: "001",
-  name: "Luis Gómez",
-  email: "luis@example.com",
-  role: "Vendedor",
-};
+// const loggedInEmployee = {
+//   id: "001",
+//   name: "Luis Gómez",
+//   email: "luis@example.com",
+//   role: "Vendedor",
+// };
 
 const Button = ({ children, onClick, className = "" }) => (
   <button
@@ -66,8 +67,12 @@ const Select = ({ label, id, options, value, onChange, className = "" }) => (
 );
 
 export default function EmployeeDashboard() {
+  const navigate = useNavigate();
+  const logout = () => {
+    navigate("/");
+  };
   const [activeSection, setActiveSection] = useState("movements");
-
+  const { loggedAccount } = useAccountStore();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const renderContent = () => {
@@ -152,7 +157,7 @@ export default function EmployeeDashboard() {
           </nav>
           <div className="flex justify-center items-center py-3">
             <FaUser className="mr-2" />
-            <span className="hidden md:inline">{loggedInEmployee.name}</span>
+            <span className="hidden md:inline">{loggedAccount.name}</span>
             <button
               type="button"
               className="hover:text-red-600 mx-2 "
@@ -160,6 +165,7 @@ export default function EmployeeDashboard() {
               data-twe-ripple-init
               data-twe-ripple-color="light"
               title="Cerrar  sesion"
+              onClick={() => logout()}
             >
               <ImExit size={30} />
             </button>

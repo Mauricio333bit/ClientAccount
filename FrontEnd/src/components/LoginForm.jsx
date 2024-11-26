@@ -2,39 +2,27 @@ import React from "react";
 import { useForm } from "react-hook-form";
 // import { loginReq } from "../api/auth.js";
 import { useNavigate } from "react-router-dom";
+import useAccountStore from "../store/accountStore";
 
 export const LoginForm = () => {
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
 
+  const login = useAccountStore((state) => state.login);
+
   const onSubmit = async (valueUser) => {
-    // const response = await loginReq(valueUser);
-    // if (response.status === 201) {
-    //   navigate("/admin");
-    // }
-    if (
-      valueUser.email == "admin@gmail.com" &&
-      valueUser.password == "admin1234" &&
-      valueUser.cuit == "90309030"
-    ) {
-      navigate("/admin");
-    }
-    if (
-      valueUser.email == "employed@gmail.com" &&
-      valueUser.password == "employed1234" &&
-      valueUser.cuit == "20102010"
-    ) {
-      navigate("/employed");
-    }
-    if (
-      valueUser.email == "client@gmail.com" &&
-      valueUser.password == "client1234" &&
-      valueUser.cuit == "50605060"
-    ) {
-      navigate("/client");
+    const accountLogged = login(
+      valueUser.email,
+      valueUser.password,
+      valueUser.cuit
+    );
+
+    if (accountLogged && accountLogged.rol) {
+      navigate(`/${accountLogged.rol}`);
+    } else {
+      console.error("Login failed");
     }
   };
-
   return (
     <form
       className="sign-in-form"

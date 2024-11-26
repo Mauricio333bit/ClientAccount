@@ -6,10 +6,12 @@ import {
   FaEdit,
   FaBars,
   FaTimes,
-  FaFileInvoiceDollar,
   FaCreditCard,
 } from "react-icons/fa";
 import { ImExit } from "react-icons/im";
+import { useNavigate } from "react-router-dom";
+import useAccountStore from "../store/accountStore";
+import useMovimientoStore from "../store/movimientoStore";
 
 // Datos de ejemplo
 const clientData = {
@@ -21,40 +23,50 @@ const clientData = {
   creditLimit: 5000.0,
 };
 
-const initialMovements = [
-  {
-    id: "001",
-    date: "2023-05-15",
-    type: "Factura",
-    amount: 500,
-    invoiceNumber: "F001",
-  },
-  {
-    id: "002",
-    date: "2023-05-14",
-    type: "Pago",
-    amount: -1000,
-    invoiceNumber: "P001",
-  },
-  {
-    id: "003",
-    date: "2023-05-13",
-    type: "Remito",
-    amount: 750,
-    invoiceNumber: "R001",
-  },
-  {
-    id: "004",
-    date: "2023-05-12",
-    type: "Crédito",
-    amount: 2000,
-    invoiceNumber: "C001",
-  },
-];
+// const initialMovements = [
+//   {
+//     id: "001",
+//     date: "2023-05-15",
+//     type: "Factura",
+//     amount: 500,
+//     invoiceNumber: "F001",
+//   },
+//   {
+//     id: "002",
+//     date: "2023-05-14",
+//     type: "Pago",
+//     amount: -1000,
+//     invoiceNumber: "P001",
+//   },
+//   {
+//     id: "003",
+//     date: "2023-05-13",
+//     type: "Remito",
+//     amount: 750,
+//     invoiceNumber: "R001",
+//   },
+//   {
+//     id: "004",
+//     date: "2023-05-12",
+//     type: "Crédito",
+//     amount: 2000,
+//     invoiceNumber: "C001",
+//   },
+// ];
 
 export default function ClientDashboard() {
+  const { loggedAccount } = useAccountStore();
+  const { movimientos } = useMovimientoStore();
+  const movimientosCliente = movimientos.filter(
+    (movimiento) => movimiento.clienteId === loggedAccount.id
+  );
+
+  const navigate = useNavigate();
+  const logout = () => {
+    navigate("/");
+  };
   const [activeSection, setActiveSection] = useState("movements");
-  const [movements] = useState(initialMovements);
+
   const [clientInfo, setClientInfo] = useState(clientData);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,7 +75,12 @@ export default function ClientDashboard() {
   const renderContent = () => {
     switch (activeSection) {
       case "movements":
-        return <MovementsSection movements={movements} openModal={openModal} />;
+        return (
+          <MovementsSection
+            movements={movimientosCliente}
+            openModal={openModal}
+          />
+        );
       case "account":
         return (
           <AccountSection
@@ -161,7 +178,7 @@ export default function ClientDashboard() {
           </nav>
           <div className="flex justify-center items-center py-3">
             <FaUser className="mr-2" />
-            <span className="hidden md:inline">{clientInfo.name}</span>
+            <span className="hidden md:inline">{loggedAccount.name}</span>
             <button
               type="button"
               className="hover:text-red-600 mx-2 "
@@ -169,6 +186,7 @@ export default function ClientDashboard() {
               data-twe-ripple-init
               data-twe-ripple-color="light"
               title="Cerrar  sesion"
+              onClick={() => logout()}
             >
               <ImExit size={30} />
             </button>
@@ -197,7 +215,7 @@ export default function ClientDashboard() {
   );
 }
 
-function MovementsSection({ movements, openModal }) {
+function MovementsSection({ movements }) {
   return (
     <div className="bg-white shadow rounded-lg p-6">
       <h2 className="text-2xl font-semibold mb-4">Últimos Movimientos</h2>
@@ -220,26 +238,38 @@ function MovementsSection({ movements, openModal }) {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {movements.map((movement) => (
-              <tr key={movement.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{movement.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{movement.type}</td>
-                <td
-                  className={`px-6 py-4 whitespace-nowrap ${
-                    movement.amount < 0 ? "text-red-600" : "text-green-600"
-                  }`}
-                >
-                  ${Math.abs(movement.amount).toFixed(2)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {movement.invoiceNumber}
+            {movements.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                  No hay movimientos asociados a esta cuenta
                 </td>
               </tr>
-            ))}
+            ) : (
+              movements.map((movement) => (
+                <tr key={movement.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {movement.date}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {movement.type}
+                  </td>
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${
+                      movement.amount < 0 ? "text-red-600" : "text-green-600"
+                    }`}
+                  >
+                    ${Math.abs(movement.amount).toFixed(2)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {movement.invoiceNumber}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
-      <div className="mt-6 flex justify-center space-x-4">
+      {/* <div className="mt-6 flex justify-center space-x-4">
         <button
           onClick={() =>
             openModal({
@@ -252,7 +282,7 @@ function MovementsSection({ movements, openModal }) {
           <FaFileInvoiceDollar className="mr-2" />
           Pagar Factura
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
@@ -371,44 +401,44 @@ function ProfileSection({ clientInfo, setClientInfo }) {
   );
 }
 
-function PayInvoiceForm() {
-  return (
-    <form className="space-y-4">
-      <div>
-        <label
-          htmlFor="invoiceNumber"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Número de Factura
-        </label>
-        <input
-          type="text"
-          id="invoiceNumber"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="amount"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Monto
-        </label>
-        <input
-          type="number"
-          id="amount"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-        />
-      </div>
-      <button
-        type="submit"
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
-      >
-        Confirmar Pago
-      </button>
-    </form>
-  );
-}
+// function PayInvoiceForm() {
+//   return (
+//     <form className="space-y-4">
+//       <div>
+//         <label
+//           htmlFor="invoiceNumber"
+//           className="block text-sm font-medium text-gray-700"
+//         >
+//           Número de Factura
+//         </label>
+//         <input
+//           type="text"
+//           id="invoiceNumber"
+//           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+//         />
+//       </div>
+//       <div>
+//         <label
+//           htmlFor="amount"
+//           className="block text-sm font-medium text-gray-700"
+//         >
+//           Monto
+//         </label>
+//         <input
+//           type="number"
+//           id="amount"
+//           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+//         />
+//       </div>
+//       <button
+//         type="submit"
+//         className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+//       >
+//         Confirmar Pago
+//       </button>
+//     </form>
+//   );
+// }
 
 function RequestCreditForm() {
   return (
